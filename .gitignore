@@ -1,0 +1,22 @@
+node_modules/
+server/config.local.php
+server/.rate-limits/
+.env
+*.log
+.serena/
+.playwright-mcp/
+artifacts/
+.tmp/
+
+# This repository contains the standalone website; WordPress stays local.
+/wordpress/
+/docs/superpowers/
+/scripts/wordpress-qa-router.php
+/scripts/sync-theme-assets.mjs
+/tests/acf-*
+/tests/wordpress*
+/tests/inquiry-mail.*
+/tests/inquiry-browser.js
+/tests/badge-position-browser.js
+/tests/gallery-swipe-browser.js
+/tests/fixtures/wordpress-demo-baseline.json
