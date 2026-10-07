@@ -7,6 +7,7 @@ export const site = {
 };
 export const copy = {
   de: {
+    datePicker: {placeholder:'TT.MM.JJJJ',open:'Kalender öffnen',previous:'Vorheriger Monat',next:'Nächster Monat',clear:'Datum löschen',title:'Datum auswählen'},
     title: 'Bergedorf Apartments — Wohnen auf Zeit in Hamburg',
     meta: '15 komplett ausgestattete Apartments in Hamburg-Bergedorf. Eigene Küche, WLAN und Self Check-in 24/7. Jetzt Ihren Aufenthalt direkt anfragen.',
     skip: 'Zum Inhalt', nav: ['Apartments', 'Über uns', 'Lage', 'Kontakt'], contact: 'Kontakt aufnehmen', inquire: 'Aufenthalt anfragen',

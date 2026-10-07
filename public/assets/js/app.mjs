@@ -1,5 +1,6 @@
 import { localToday, validateInquiry } from './validation.mjs';
 import { normalizePhoto, positionLabel } from './catalogue.mjs';
+import { setupGermanDates, dateToISO, nextDay } from './date-picker.mjs';
 
 document.documentElement.classList.add('js');
 const data = JSON.parse(document.querySelector('#site-data').textContent);
@@ -383,11 +384,11 @@ $$('[data-inquiry]').forEach(link=>link.addEventListener('click',event=>{
 const today=localToday();
 form.elements.arrival.min=today;
 form.elements.departure.min=today;
-form.elements.arrival.addEventListener('change',()=>{
-  const arrival=form.elements.arrival.value;
-  if(arrival){const date=new Date(`${arrival}T12:00:00Z`);date.setUTCDate(date.getUTCDate()+1);form.elements.departure.min=date.toISOString().slice(0,10);}
-  else form.elements.departure.min=localToday();
-});
+setupGermanDates(form,data.datePicker);
+const updateDepartureMinimum=()=>{const arrival=dateToISO(form.elements.arrival.value);form.elements.departure.min=arrival?nextDay(arrival):localToday();};
+form.elements.arrival.addEventListener('change',updateDepartureMinimum);
+form.elements.arrival.addEventListener('input',updateDepartureMinimum);
+form.addEventListener('reset',()=>queueMicrotask(()=>{form.elements.arrival.min=localToday();form.elements.departure.min=localToday();}));
 function clearErrors() {
   $$('.field-error').forEach(error=>{error.hidden=true;error.textContent='';});
   $$('[aria-invalid]').forEach(field=>field.removeAttribute('aria-invalid'));
@@ -412,6 +413,7 @@ form.addEventListener('submit',async event=>{
   clearErrors();
   status.hidden=true;
   const values=Object.fromEntries(new FormData(form));
+  for(const key of ['arrival','departure'])values[key]=dateToISO(values[key])??values[key];
   values.consent=form.elements.consent.checked;
   const errors=validateInquiry(values,localToday(),data.apartments.map(unit=>unit.id));
   if(Object.keys(errors).length){displayErrors(errors);return;}
