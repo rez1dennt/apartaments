@@ -17,11 +17,13 @@ async(page)=>{
     await phone.focus();assert(await phone.inputValue()==='+49','German prefix missing on focus');
     assert(await page.locator('.phone-mask-guide').isVisible(),'Mask slots not visible on focus');
     await phone.press('1');await phone.press('Backspace');await page.locator('#inquiry-name').focus();
-    assert(await phone.inputValue()==='','Deleting back to prefix must leave optional phone empty');
+    assert(await phone.inputValue()==='+49','Deleting subscriber digits removed fixed prefix');
     await phone.focus();
     await phone.pressSequentially('15123456789');assert(await phone.inputValue()==='+49 1512 3456789','Default German prefix input');
-    await phone.fill('');await phone.pressSequentially('015123456789');assert(await phone.inputValue()==='01512 3456789','Progressive typing mask');
-    await phone.press('ControlOrMeta+A');await phone.press('Backspace');assert(await phone.inputValue()==='','Cannot clear mask');
+    await phone.fill('');await phone.pressSequentially('15123456789');assert(await phone.inputValue()==='+49 1512 3456789','Progressive typing mask');
+    await phone.press('ControlOrMeta+A');await phone.press('Backspace');assert(await phone.inputValue()==='+49','Select-all deletion removed prefix');
+    for(let i=0;i<5;i++)await phone.press('Backspace');assert(await phone.inputValue()==='+49','Repeated deletion removes prefix');
+    await phone.press('Home');await phone.press('Delete');assert(await phone.inputValue()==='+49','Delete at start removed prefix');
     await phone.fill('+4915123456789');assert(await phone.inputValue()==='+49 1512 3456789','Missing phone mask');
     await phone.evaluate(el=>el.setSelectionRange(9,9));await phone.press('Backspace');
     assert((await phone.inputValue()).replace(/\D/g,'')==='491513456789','Backspace stuck on separator');
@@ -30,7 +32,7 @@ async(page)=>{
     await phone.fill('+4915123456789');await phone.evaluate(el=>el.setSelectionRange(8,8));await phone.press('7');
     assert((await phone.inputValue()).replace(/\D/g,'')==='49151273456789','Middle edit lost digits');
     assert(await phone.evaluate(el=>el.selectionStart<el.value.length),'Middle edit jumps cursor to end');
-    await phone.fill('+442079460018');assert(await phone.inputValue()==='+44 20 7946 0018','International mask');
+    await phone.fill('442079460018');assert((await phone.inputValue()).replace(/\D/g,'')==='49442079460018','User digits replaced fixed country');
     await phone.fill('0049 (1512) 345-6789');assert(await phone.inputValue()==='+49 1512 3456789','Paste/00 prefix');
     const combo=page.locator('#inquiry-apartment-control'),popup=page.locator('#inquiry-apartment-options-popup');
     assert(await combo.textContent().then(v=>v.includes('Apartment 01')),'Preselection');
@@ -59,7 +61,7 @@ async(page)=>{
     await page.locator('#inquiry-form [type=submit]').click();await page.locator('.form-status.is-success').waitFor();
     assert(payload.apartment==='3'&&payload.phone==='+49 1512 3456789','Wrong submission');
     assert(await combo.textContent().then(v=>v.includes('Keine Präferenz')),'Reset does not refresh choices');
-    assert(await phone.inputValue()==='','Reset phone');
+    assert(await phone.inputValue()==='+49','Reset must retain fixed prefix');
     await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#inquiry-dialog').open);
     await page.locator('.feature-booking [data-inquiry]').click();await page.waitForFunction(()=>getComputedStyle(document.querySelector('#inquiry-dialog')).opacity==='1');
     assert(await combo.textContent().then(v=>v.includes('Apartment 01')),'Reopen preselection stale');

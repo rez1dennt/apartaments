@@ -1,7 +1,7 @@
 import { localToday, validateInquiry } from './validation.mjs';
 import { normalizePhoto, positionLabel } from './catalogue.mjs';
 import { setupGermanDates, dateToISO, nextDay } from './date-picker.mjs';
-import {setupPhoneMask} from './phone-input.mjs';
+import {setupPhoneMask,serializePhone} from './phone-input.mjs';
 import {setupApartmentPicker} from './apartment-picker.mjs';
 
 document.documentElement.classList.add('js');
@@ -419,6 +419,7 @@ form.addEventListener('submit',async event=>{
   clearErrors();
   status.hidden=true;
   const values=Object.fromEntries(new FormData(form));
+  values.phone=serializePhone(values.phone);
   for(const key of ['arrival','departure'])values[key]=dateToISO(values[key])??values[key];
   values.consent=form.elements.consent.checked;
   const errors=validateInquiry(values,localToday(),data.apartments.map(unit=>unit.id));
