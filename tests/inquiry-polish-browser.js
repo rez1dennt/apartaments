@@ -13,6 +13,13 @@ async(page)=>{
     await page.locator('.feature-booking [data-inquiry]').click();
     await page.waitForFunction(()=>getComputedStyle(document.querySelector('#inquiry-dialog')).opacity==='1');
     const phone=page.locator('#inquiry-phone');
+    assert(await phone.getAttribute('placeholder')==='+49 ____ _______','Empty field does not show the mask');
+    await phone.focus();assert(await phone.inputValue()==='+49','German prefix missing on focus');
+    assert(await page.locator('.phone-mask-guide').isVisible(),'Mask slots not visible on focus');
+    await phone.press('1');await phone.press('Backspace');await page.locator('#inquiry-name').focus();
+    assert(await phone.inputValue()==='','Deleting back to prefix must leave optional phone empty');
+    await phone.focus();
+    await phone.pressSequentially('15123456789');assert(await phone.inputValue()==='+49 1512 3456789','Default German prefix input');
     await phone.fill('');await phone.pressSequentially('015123456789');assert(await phone.inputValue()==='01512 3456789','Progressive typing mask');
     await phone.press('ControlOrMeta+A');await phone.press('Backspace');assert(await phone.inputValue()==='','Cannot clear mask');
     await phone.fill('+4915123456789');assert(await phone.inputValue()==='+49 1512 3456789','Missing phone mask');

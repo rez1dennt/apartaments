@@ -15,6 +15,12 @@ export function phoneCaret(value,count){
 export function setupPhoneMask(input){
   if(!input||input.dataset.phoneMask)return;
   input.dataset.phoneMask='true';input.inputMode='tel';
+  if(input.placeholder==='+49 …'||!input.hasAttribute('placeholder'))input.placeholder='+49 ____ _______';
+  const wrapper=document.createElement('div');wrapper.className='phone-control';input.before(wrapper);wrapper.append(input);
+  const guide=document.createElement('span');guide.className='phone-mask-guide';guide.setAttribute('aria-hidden','true');guide.hidden=true;
+  const prefix=document.createElement('span');prefix.textContent='+49';prefix.style.visibility='hidden';guide.append(prefix,document.createTextNode(' ____ _______'));wrapper.append(guide);
+  let automaticPrefix=false;
+  const updateGuide=()=>{guide.hidden=!(automaticPrefix&&input.value==='+49');guide.style.font=getComputedStyle(input).font;};
   let previous=phoneCharacters(input.value);
   const format=event=>{
     if(event?.isComposing)return;
@@ -27,11 +33,23 @@ export function setupPhoneMask(input){
       if(index>=0&&index<chars.length){chars=chars.slice(0,index)+chars.slice(index+1);if(backward)position--;}
     }
     input.value=formatPhone(chars);previous=phoneCharacters(input.value);
+    automaticPrefix=previous==='+49';
+    updateGuide();
     if(document.activeElement===input){const caret=phoneCaret(input.value,position);input.setSelectionRange(caret,caret);}
   };
   input.addEventListener('input',format);
   input.addEventListener('compositionend',format);
-  input.addEventListener('blur',format);
-  input.form?.addEventListener('reset',()=>queueMicrotask(()=>{previous=phoneCharacters(input.value);}));
+  input.addEventListener('focus',()=>{
+    if(!input.value){input.value='+49';automaticPrefix=true;format();input.setSelectionRange(3,3);}
+  });
+  // Paste replaces the suggested prefix. A national/international prefix can
+  // likewise replace it by typing 0 or +, without requiring a country selector.
+  const replacePrefix=()=>{if(automaticPrefix)input.setSelectionRange(0,input.value.length);};
+  input.addEventListener('paste',replacePrefix);
+  input.addEventListener('beforeinput',event=>{if(automaticPrefix&&event.inputType==='insertText'&&/^[+0]/.test(event.data||''))replacePrefix();});
+  const clearPrefix=()=>{if(automaticPrefix&&input.value==='+49'){input.value='';previous='';}automaticPrefix=false;updateGuide();};
+  input.addEventListener('blur',()=>{clearPrefix();format();});
+  input.form?.addEventListener('submit',clearPrefix,{capture:true});
+  input.form?.addEventListener('reset',()=>queueMicrotask(()=>{previous=phoneCharacters(input.value);automaticPrefix=false;updateGuide();}));
   format();
 }

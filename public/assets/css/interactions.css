@@ -135,6 +135,8 @@
 .date-calendar .date-calendar-clear{display:block;min-height:2.25rem;margin-top:.5rem;padding:.375rem .625rem;color:var(--color-muted);font-size:.75rem}
 @media(max-width:420px){.form-field-date{grid-column:1/-1}}
 /* Inquiry form: generous spacing and softly animated native-value choices. */
+.phone-control{position:relative;min-width:0}
+.phone-mask-guide{position:absolute;inset:0;display:flex;align-items:center;padding:var(--space-3) var(--space-4);white-space:pre;pointer-events:none;color:var(--color-muted);opacity:.55}
 .inquiry-modal{width:min(46rem,calc(100% - var(--space-8)));padding:var(--space-10) var(--space-12);scrollbar-width:thin;scrollbar-color:var(--color-line) transparent}
 .inquiry-modal[open]{animation:modal-in var(--duration-disclosure) var(--ease-out) both}
 .inquiry-modal::backdrop{animation:menu-backdrop-in var(--duration-disclosure) var(--ease-out) both}
