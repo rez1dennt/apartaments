@@ -134,6 +134,48 @@
 .date-calendar button:disabled{opacity:.3;cursor:default}
 .date-calendar .date-calendar-clear{display:block;min-height:2.25rem;margin-top:.5rem;padding:.375rem .625rem;color:var(--color-muted);font-size:.75rem}
 @media(max-width:420px){.form-field-date{grid-column:1/-1}}
+/* Inquiry form: generous spacing and softly animated native-value choices. */
+.inquiry-modal{width:min(46rem,calc(100% - var(--space-8)));padding:var(--space-10) var(--space-12);scrollbar-width:thin;scrollbar-color:var(--color-line) transparent}
+.inquiry-modal[open]{animation:modal-in var(--duration-disclosure) var(--ease-out) both}
+.inquiry-modal::backdrop{animation:menu-backdrop-in var(--duration-disclosure) var(--ease-out) both}
+.inquiry-modal[data-closing]::backdrop{animation:menu-backdrop-out var(--duration-normal) var(--ease-in) both}
+.inquiry-modal .modal-top{margin-bottom:var(--space-5)}
+.inquiry-modal .modal-intro{margin-top:var(--space-5);max-width:32rem;line-height:1.8}
+.inquiry-modal .form-grid{gap:var(--space-6);margin-top:var(--space-8)}
+.inquiry-modal .form-field{gap:var(--space-3)}
+.inquiry-modal .form-field label>span{display:inline}
+.inquiry-modal .form-field input,.inquiry-modal .form-field select,.inquiry-modal .form-field textarea{min-height:var(--control-height);transition:border-color var(--duration-fast),box-shadow var(--duration-fast)}
+.inquiry-modal .form-field textarea{min-height:7rem}
+.inquiry-modal .form-consent{margin-top:var(--space-6)}
+.inquiry-modal .form-actions{margin-top:var(--space-8)}
+.inquiry-modal[open] h2,.inquiry-modal[open] .modal-intro,.inquiry-modal[open] .form-field{animation:inquiry-content-in var(--duration-normal) var(--ease-out) backwards}
+.inquiry-modal .form-field:has(.apartment-popup:not([hidden])){position:relative;z-index:5}
+.inquiry-modal .form-field:has(.date-calendar:not([hidden])){position:relative;z-index:4}
+.inquiry-modal[open] .modal-intro{animation-delay:40ms}
+.inquiry-modal[open] .form-field:nth-child(1),.inquiry-modal[open] .form-field:nth-child(2){animation-delay:70ms}
+.inquiry-modal[open] .form-field:nth-child(3),.inquiry-modal[open] .form-field:nth-child(4){animation-delay:100ms}
+.inquiry-modal[open] .form-field:nth-child(5),.inquiry-modal[open] .form-field:nth-child(6){animation-delay:130ms}
+.inquiry-modal[open] .form-field:nth-child(7){animation-delay:160ms}
+@keyframes inquiry-content-in{from{opacity:0;transform:translateY(.5rem)}to{opacity:1;transform:none}}
+.apartment-combobox{position:relative;min-width:0}
+.apartment-choice{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);width:100%;min-height:var(--control-height);padding:var(--space-3) var(--space-4);border:1px solid var(--color-line);border-radius:var(--radius-sm);background:var(--color-white);color:var(--color-text);font:inherit;font-size:var(--text-sm);line-height:1.5;text-align:left;transition:border-color var(--duration-fast),box-shadow var(--duration-fast)}
+.apartment-choice:hover{border-color:var(--color-muted)}
+.apartment-choice[aria-expanded=true],.apartment-choice:focus-visible{border-color:var(--color-action);box-shadow:0 0 0 3px rgb(85 83 65 / .08)}
+.apartment-choice:focus-visible{outline:2px solid var(--color-focus);outline-offset:3px}
+.apartment-choice[aria-invalid=true]{border-color:var(--color-error)}
+.apartment-choice:disabled{opacity:.5;cursor:default}
+.apartment-choice-value{min-width:0;overflow-wrap:anywhere}
+.apartment-choice .apartment-choice-arrow{flex-shrink:0;width:var(--space-4);height:var(--space-4);background:currentColor;mask:url('../icons/chevron-down.svg') center/contain no-repeat;transition:transform var(--duration-normal) var(--ease-out)}
+.apartment-choice[aria-expanded=true] .apartment-choice-arrow{transform:rotate(180deg)}
+.apartment-popup{position:absolute;top:calc(100% + var(--space-2));left:0;right:0;z-index:40;overflow:hidden;padding:.375rem;border:1px solid var(--color-line);border-radius:var(--radius-sm);background:var(--color-white);box-shadow:var(--shadow-soft);transform-origin:top}
+.apartment-popup.is-above{top:auto;bottom:calc(100% + var(--space-2));transform-origin:bottom}
+.apartment-options{position:relative;max-height:14rem;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--color-line) transparent}
+.apartment-option{display:flex;align-items:center;min-height:var(--control-small);padding:var(--space-2) var(--space-3);border-radius:var(--radius-xs);font-size:var(--text-sm);line-height:1.5;cursor:pointer;overflow-wrap:anywhere}
+.apartment-option:hover,.apartment-option.is-active{background:var(--color-surface);color:var(--color-text)}
+.apartment-option[aria-selected=true]{font-weight:600;color:var(--color-action)}
+.apartment-option[aria-selected=true]::after{content:'✓';margin-left:auto;padding-left:var(--space-3)}
+@media(max-width:540px){.inquiry-modal{width:calc(100% - var(--space-6));max-height:calc(100dvh - var(--space-6));padding:var(--space-6)}.inquiry-modal .form-grid{grid-template-columns:minmax(0,1fr);gap:var(--space-5);margin-top:var(--space-6)}.inquiry-modal .form-field{gap:var(--space-2)}.inquiry-modal .form-actions{margin-top:var(--space-6)}}
+@media(max-width:350px){.inquiry-modal{padding:var(--space-5)}}
 @media (max-width: 350px) { .menu-toggle, .js .menu-toggle { min-width: 5.9rem; padding-inline: var(--space-3); } }
 @media (prefers-reduced-motion: reduce) {
   .menu-dialog[open], .menu-dialog::backdrop, .menu-dialog[open] nav a { animation: none!important; }

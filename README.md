@@ -6,9 +6,10 @@
 
 ## Посмотреть сайт
 
-Требуются Node.js 22+ и PHP 8.2+. Зависимостей npm нет.
+Требуются Node.js 22+ и PHP 8.2+. Сборка использует esbuild и libphonenumber-js для локальной маски телефона; браузер не обращается к сторонним CDN.
 
 ```powershell
+npm ci
 npm run build
 npm run dev
 ```

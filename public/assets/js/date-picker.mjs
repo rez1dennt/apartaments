@@ -64,6 +64,7 @@ export function setupGermanDates(form,options={}){
       grid.replaceChildren(...nodes);
     };
     const open=()=>{
+      form.dispatchEvent(new CustomEvent('inquiry-picker-open',{detail:wrapper}));
       active?.close();focusDate=dateToISO(input.value)||minimum();if(focusDate<minimum())focusDate=minimum();
       const d=fromISO(focusDate);viewYear=d.getUTCFullYear();viewMonth=d.getUTCMonth();showMonth();popup.hidden=false;toggle.setAttribute('aria-expanded','true');active={popup,close};
       popup.classList.remove('is-above');const fieldBox=wrapper.getBoundingClientRect(),box=form.closest('dialog')?.getBoundingClientRect();
@@ -93,5 +94,6 @@ export function setupGermanDates(form,options={}){
     document.addEventListener('pointerdown',event=>{if(!popup.hidden&&!wrapper.contains(event.target))close();});
     document.addEventListener('focusin',event=>{if(!popup.hidden&&!wrapper.contains(event.target))close();});
     form.addEventListener('reset',()=>close());form.closest('dialog')?.addEventListener('close',()=>close());
+    form.addEventListener('inquiry-picker-open',event=>{if(event.detail!==wrapper)close();});
   }
 }

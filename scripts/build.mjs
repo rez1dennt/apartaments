@@ -1,4 +1,5 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, copyFile } from 'node:fs/promises';
+import { build } from 'esbuild';
 import { resolve } from 'node:path';
 import { homepage, layout, legalPage } from '../src/templates.mjs';
 import { legal } from '../src/legal.mjs';
@@ -10,6 +11,9 @@ if (originInput) {
 }
 const origin = originInput.replace(/\/$/, '');
 const publicRoot = resolve('public');
+await build({entryPoints:['src/phone-input.mjs'],outfile:resolve(publicRoot,'assets/js/phone-input.mjs'),bundle:true,format:'esm',target:'es2022',minify:true,banner:{js:'/* libphonenumber-js: MIT license in ../licenses/libphonenumber-js.txt */'}});
+await mkdir(resolve(publicRoot,'assets/licenses'),{recursive:true});
+await copyFile('node_modules/libphonenumber-js/LICENSE',resolve(publicRoot,'assets/licenses/libphonenumber-js.txt'));
 const routes=[];
 for (const lang of ['de']) {
   const prefix = '';

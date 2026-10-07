@@ -8,5 +8,13 @@
     "test": "node --test tests/*.test.mjs",
     "verify": "node scripts/build.mjs && node --test tests/*.test.mjs && php tests/contact-test.php && php -l public/api/contact.php && php -l server/contact.php"
   },
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "libphonenumber-js": "1.13.14"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
 }

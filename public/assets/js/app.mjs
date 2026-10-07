@@ -1,6 +1,8 @@
 import { localToday, validateInquiry } from './validation.mjs';
 import { normalizePhoto, positionLabel } from './catalogue.mjs';
 import { setupGermanDates, dateToISO, nextDay } from './date-picker.mjs';
+import {setupPhoneMask} from './phone-input.mjs';
+import {setupApartmentPicker} from './apartment-picker.mjs';
 
 document.documentElement.classList.add('js');
 const data = JSON.parse(document.querySelector('#site-data').textContent);
@@ -56,7 +58,7 @@ function closeDialog(dialog) {
       const isMenu=dialog.id==='mobile-menu';
       const current=getComputedStyle(dialog);
       animation=dialog.animate([{opacity:current.opacity,transform:current.transform},{opacity:0,transform:isMenu?'translateX(2.5rem)':'translateY(8px)'}],{
-        duration:parseFloat(style.getPropertyValue(isMenu?'--duration-menu-close':'--duration-fast')) || 160,
+        duration:parseFloat(style.getPropertyValue(isMenu?'--duration-menu-close':dialog.id==='inquiry-dialog'?'--duration-normal':'--duration-fast')) || 160,
         easing:style.getPropertyValue(isMenu?'--ease-in':'--ease').trim(),fill:'forwards'
       });
       await animation.finished.catch(()=>{});
@@ -350,6 +352,9 @@ $('[data-cookie-necessary]').addEventListener('click',()=>saveCookies('necessary
 $('[data-cookie-save]').addEventListener('click',()=>saveCookies('necessary'));
 
 const form=$('#inquiry-form');
+setupPhoneMask(form.elements.phone);
+const apartmentPicker=setupApartmentPicker(form.elements.apartment);
+const fieldControl=key=>document.querySelector(`[data-field-control="${key}"]`)||form.elements[key];
 const status=$('.form-status');
 let contactConfig={enabled:false,csrf:null};
 const contactEndpoint=data.contactEndpoint||'/api/contact.php';
@@ -377,6 +382,7 @@ async function loadContactConfig() {
 $$('[data-inquiry]').forEach(link=>link.addEventListener('click',event=>{
   event.preventDefault();
   form.elements.apartment.value=link.dataset.apartment||'';
+  apartmentPicker.refresh();
   status.hidden=true;
   openDialog($('#inquiry-dialog'),link);
   loadContactConfig();
@@ -395,17 +401,17 @@ function clearErrors() {
 }
 function displayErrors(errors) {
   for(const [key,code] of Object.entries(errors)) {
-    const field=form.elements[key];
+    const field=fieldControl(key);
     const node=$(`#error-${key}`);
     if(field)field.setAttribute('aria-invalid','true');
     if(node){node.textContent=data.errors[code]||data.error;node.hidden=false;}
   }
-  form.elements[Object.keys(errors)[0]]?.focus();
+  fieldControl(Object.keys(errors)[0])?.focus();
 }
 form.addEventListener('input',event=>{
   const key=event.target.name;
   const error=$(`#error-${key}`);
-  if(error){error.hidden=true;event.target.removeAttribute('aria-invalid');}
+  if(error){error.hidden=true;fieldControl(key)?.removeAttribute('aria-invalid');}
   status.hidden=true;
 });
 form.addEventListener('submit',async event=>{

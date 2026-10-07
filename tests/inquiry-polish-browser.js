@@ -1,0 +1,87 @@
+// Phone, animated choices, synchronization and keyboard QA; no real mail is sent.
+async(page)=>{
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const checks=[],errors=[];let payload;
+  page.on('pageerror',e=>errors.push(e.message));
+  await page.route('**/api/contact.php',async route=>{
+    if(route.request().method()==='POST')payload=route.request().postDataJSON();
+    await route.fulfill({status:200,contentType:'application/json',body:'{"enabled":true,"success":true,"csrf":"polish-test"}'});
+  });
+  for(const width of [1440,768,360,320]){
+    await page.setViewportSize({width,height:900});await page.goto('http://127.0.0.1:4173/');
+    if(await page.locator('.cookie-banner').isVisible())await page.locator('[data-cookie-necessary]').click();
+    await page.locator('.feature-booking [data-inquiry]').click();
+    await page.waitForFunction(()=>getComputedStyle(document.querySelector('#inquiry-dialog')).opacity==='1');
+    const phone=page.locator('#inquiry-phone');
+    await phone.fill('');await phone.pressSequentially('015123456789');assert(await phone.inputValue()==='01512 3456789','Progressive typing mask');
+    await phone.press('ControlOrMeta+A');await phone.press('Backspace');assert(await phone.inputValue()==='','Cannot clear mask');
+    await phone.fill('+4915123456789');assert(await phone.inputValue()==='+49 1512 3456789','Missing phone mask');
+    await phone.evaluate(el=>el.setSelectionRange(9,9));await phone.press('Backspace');
+    assert((await phone.inputValue()).replace(/\D/g,'')==='491513456789','Backspace stuck on separator');
+    await phone.fill('+4915123456789');await phone.evaluate(el=>el.setSelectionRange(3,3));await phone.press('Delete');
+    assert((await phone.inputValue()).replace(/\D/g,'')==='495123456789','Forward deletion stuck on separator');
+    await phone.fill('+4915123456789');await phone.evaluate(el=>el.setSelectionRange(8,8));await phone.press('7');
+    assert((await phone.inputValue()).replace(/\D/g,'')==='49151273456789','Middle edit lost digits');
+    assert(await phone.evaluate(el=>el.selectionStart<el.value.length),'Middle edit jumps cursor to end');
+    await phone.fill('+442079460018');assert(await phone.inputValue()==='+44 20 7946 0018','International mask');
+    await phone.fill('0049 (1512) 345-6789');assert(await phone.inputValue()==='+49 1512 3456789','Paste/00 prefix');
+    const combo=page.locator('#inquiry-apartment-control'),popup=page.locator('#inquiry-apartment-options-popup');
+    assert(await combo.textContent().then(v=>v.includes('Apartment 01')),'Preselection');
+    await combo.click();assert(await combo.getAttribute('aria-expanded')==='true','Dropdown open');
+    assert(await popup.evaluate(el=>el.getAnimations().length>0),'Popup does not animate');
+    await page.waitForFunction(()=>!document.querySelector('#inquiry-apartment-options-popup').getAnimations().length);
+    assert(await combo.locator('.apartment-choice-arrow').evaluate(el=>getComputedStyle(el).transform!=='none'),'Arrow does not rotate');
+    const box=await popup.boundingBox();assert(box.x>=0&&box.x+box.width<=width&&box.y>=0&&box.y+box.height<=900,'Popup overflow');
+    await page.screenshot({path:`artifacts/inquiry-polished-${width}.png`});
+    await combo.press('End');await combo.press('Escape');
+    assert(await page.locator('#inquiry-apartment').inputValue()==='1','Escape changed selection');
+    assert(await page.locator('#inquiry-dialog').evaluate(el=>el.open),'Escape closed whole modal');
+    await combo.press('ArrowDown');await combo.press('Escape');await combo.press('ArrowDown');
+    await page.waitForFunction(()=>!document.querySelector('#inquiry-apartment-options-popup').getAnimations().length);
+    assert(await popup.isVisible(),'Rapid reopen hidden by stale close');
+    await combo.press('Escape');
+    await combo.press('ArrowDown');await combo.press('End');await combo.press('Enter');
+    assert(await page.locator('#inquiry-apartment').inputValue()==='15','Keyboard selection');
+    await combo.click();await page.locator('#inquiry-apartment-options [role=option]').nth(3).click();
+    assert(await page.locator('#inquiry-apartment').inputValue()==='3','Pointer selection');
+    await combo.press('ArrowDown');await combo.press('ArrowDown');await page.locator('#inquiry-message').click();
+    assert(await combo.getAttribute('aria-expanded')==='false','Outside does not close');
+    assert(await page.locator('#inquiry-apartment').inputValue()==='4','Outside focus exit loses keyboard selection');
+    await combo.click();await page.locator('#inquiry-apartment-options [role=option]').nth(3).click();
+    await page.locator('#inquiry-name').fill('Polish QA');await page.locator('#inquiry-email').fill('qa@example.invalid');await page.locator('[name=consent]').check();
+    await page.locator('#inquiry-form [type=submit]').click();await page.locator('.form-status.is-success').waitFor();
+    assert(payload.apartment==='3'&&payload.phone==='+49 1512 3456789','Wrong submission');
+    assert(await combo.textContent().then(v=>v.includes('Keine Präferenz')),'Reset does not refresh choices');
+    assert(await phone.inputValue()==='','Reset phone');
+    await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#inquiry-dialog').open);
+    await page.locator('.feature-booking [data-inquiry]').click();await page.waitForFunction(()=>getComputedStyle(document.querySelector('#inquiry-dialog')).opacity==='1');
+    assert(await combo.textContent().then(v=>v.includes('Apartment 01')),'Reopen preselection stale');
+    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);assert(overflow<=0,'Page overflow');
+    checks.push({width,mask:true,dropdown:true,isoCompatible:true});
+  }
+  await page.emulateMedia({reducedMotion:'reduce'});
+  const combo=page.locator('#inquiry-apartment-control');await combo.click();
+  assert(await page.locator('#inquiry-apartment-options-popup').evaluate(el=>el.getAnimations().length===0),'Reduced motion');
+  await combo.press('Escape');assert(await combo.getAttribute('aria-expanded')==='false','Reduced motion close');
+  await page.emulateMedia({reducedMotion:'no-preference'});await page.unroute('**/api/contact.php');
+  await page.setViewportSize({width:1440,height:900});
+  for(const route of ['/impressum/','/datenschutz/','/einwilligung/','/cookies/']){
+    await page.goto('http://127.0.0.1:4173'+route);await page.locator('.header-contact').click();
+    await page.waitForFunction(()=>getComputedStyle(document.querySelector('#inquiry-dialog')).opacity==='1');
+    const control=page.locator('#inquiry-apartment-control');await control.click();
+    assert(await control.locator('.apartment-choice-arrow').count()===1,'Legal page arrow missing');
+    assert(await control.locator('.apartment-choice-arrow').evaluate(el=>getComputedStyle(el).maskImage.includes('chevron-down.svg')),'Legal page arrow resource');
+    await control.press('Escape');await page.keyboard.press('Escape');
+  }
+  await page.route('**/api/contact.php',async route=>route.fulfill({status:route.request().method()==='POST'?422:200,contentType:'application/json',body:route.request().method()==='POST'?'{"errors":{"apartment":"apartment"}}':'{"enabled":true,"csrf":"polish-test"}'}));
+  await page.goto('http://127.0.0.1:4173/');await page.locator('.header-contact').click();
+  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#inquiry-dialog')).opacity==='1');
+  await page.locator('#inquiry-name').fill('Error QA');await page.locator('#inquiry-email').fill('qa@example.invalid');await page.locator('[name=consent]').check();
+  await page.locator('#inquiry-form [type=submit]').click();await page.locator('#error-apartment').waitFor({state:'visible'});
+  const control=page.locator('#inquiry-apartment-control');
+  assert(await control.getAttribute('aria-invalid')==='true'&&await control.evaluate(el=>el===document.activeElement),'Error focus targets hidden select');
+  await control.press('ArrowDown');await control.press('ArrowDown');await control.press('Enter');
+  assert(await page.locator('#error-apartment').isHidden()&&!await control.getAttribute('aria-invalid'),'Apartment error not cleared');
+  await page.unroute('**/api/contact.php');
+  assert(!errors.length,errors.join('; '));return {checks,legalDropdowns:4,errorFocus:true,reducedMotion:true,errors};
+}
